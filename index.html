@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NHS A&E Analysis — Nikit Patel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;0,700;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --nhs-blue: #1a5fa8;
+      --nhs-mid: #2e7fd4;
+      --nhs-light: #68aee8;
+      --nhs-pale: #deeaf8;
+      --white: #FFFFFF;
+      --off-white: #f5f8fd;
+      --text: #1a243a;
+      --muted: #5a6a7a;
+      --accent: #00a499;
+      --warn: #c0392b;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Source Serif 4', Georgia, serif;
+      background: var(--off-white);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #1a5fa8 0%, #2e7fd4 60%, #4a9ee0 100%);
+      color: var(--white);
+      padding: 80px 40px 64px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -80px; right: -80px;
+      width: 480px; height: 480px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--nhs-light), var(--accent), #68aee8);
+    }
+
+    .hero-inner { max-width: 860px; margin: 0 auto; position: relative; z-index: 1; }
+
+    .nhs-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.15);
+      color: var(--white);
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 2px;
+      margin-bottom: 28px;
+      border: 1px solid rgba(255,255,255,0.2);
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.1s forwards;
+    }
+
+    .nhs-badge::before {
+      content: '';
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #68aee8;
+    }
+
+    h1 {
+      font-size: clamp(2.2rem, 5vw, 3.6rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 20px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.2s forwards;
+    }
+
+    h1 span { color: #a8d4f5; font-style: italic; font-weight: 300; }
+
+    .hero-sub {
+      font-size: 1.1rem;
+      font-weight: 300;
+      color: rgba(255,255,255,0.8);
+      max-width: 560px;
+      line-height: 1.75;
+      margin-bottom: 36px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.3s forwards;
+    }
+
+    .hero-meta {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.4s forwards;
+    }
+
+    .meta-item { display: flex; flex-direction: column; gap: 3px; }
+
+    .meta-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #a8d4f5;
+    }
+
+    .meta-value { font-size: 0.95rem; color: rgba(255,255,255,0.92); }
+
+    .container { max-width: 860px; margin: 0 auto; padding: 0 40px; }
+
+    section {
+      padding: 64px 0;
+      border-bottom: 1px solid #d4e4f4;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+
+    section.visible { opacity: 1; transform: translateY(0); }
+
+    .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--nhs-mid);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--nhs-pale);
+      max-width: 60px;
+    }
+
+    h2 {
+      font-size: 1.85rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--nhs-blue);
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+
+    p {
+      font-size: 1.02rem;
+      line-height: 1.8;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 14px;
+      margin-top: 32px;
+    }
+
+    .card {
+      background: var(--white);
+      border: 1px solid #cddff2;
+      border-top: 3px solid var(--nhs-mid);
+      padding: 22px;
+      border-radius: 4px;
+    }
+
+    .card-number {
+      font-family: 'DM Mono', monospace;
+      font-size: 1.9rem;
+      font-weight: 500;
+      color: var(--nhs-blue);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .card-number.warn { color: var(--warn); }
+    .card-number.good { color: var(--accent); }
+    .card-label { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+
+    .screenshot-box {
+      background: var(--white);
+      border: 1px solid #cddff2;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-top: 28px;
+      box-shadow: 0 4px 20px rgba(26,95,168,0.08);
+    }
+
+    .screenshot-bar {
+      background: var(--nhs-blue);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-r { background: #e74c3c; }
+    .dot-y { background: #f39c12; }
+    .dot-g { background: var(--accent); }
+
+    .screenshot-img { width: 100%; display: block; object-fit: cover; }
+
+    .screenshot-placeholder {
+      width: 100%;
+      min-height: 280px;
+      background: linear-gradient(135deg, var(--nhs-pale) 0%, #c4d9f0 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: var(--nhs-blue);
+    }
+
+    .screenshot-caption {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      padding: 12px 20px;
+      border-top: 1px solid #dde8f0;
+      background: var(--off-white);
+    }
+
+    .findings-list {
+      list-style: none;
+      margin-top: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .finding-item {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      background: var(--white);
+      border: 1px solid #cddff2;
+      padding: 20px 24px;
+      border-radius: 4px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .finding-item:hover {
+      border-color: var(--nhs-mid);
+      box-shadow: 0 2px 12px rgba(26,95,168,0.07);
+    }
+
+    .finding-icon { font-size: 1.3rem; min-width: 28px; margin-top: 2px; }
+
+    .finding-text { font-size: 1rem; line-height: 1.75; color: var(--text); }
+    .finding-text strong { color: var(--nhs-blue); }
+
+    .tag {
+      display: inline-block;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 2px 8px;
+      border-radius: 2px;
+      margin-bottom: 8px;
+    }
+
+    .tag-warn { background: #fde8e6; color: var(--warn); }
+    .tag-good { background: #d4f0ee; color: #007a72; }
+    .tag-neutral { background: var(--nhs-pale); color: var(--nhs-blue); }
+
+    .steps { display: flex; flex-direction: column; gap: 20px; margin-top: 28px; }
+    .step { display: flex; gap: 20px; align-items: flex-start; }
+
+    .step-num {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--nhs-blue);
+      color: var(--white);
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .step-content h3 { font-size: 1rem; font-weight: 600; color: var(--nhs-blue); margin-bottom: 6px; }
+    .step-content p { margin-bottom: 0; font-size: 0.95rem; }
+
+    code {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.85em;
+      background: var(--nhs-pale);
+      color: var(--nhs-blue);
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    pre {
+      background: #1a2e4a;
+      color: #a8d4f5;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.84rem;
+      padding: 18px 22px;
+      border-radius: 4px;
+      overflow-x: auto;
+      margin-top: 10px;
+      line-height: 1.7;
+    }
+
+    footer {
+      background: var(--nhs-blue);
+      color: rgba(255,255,255,0.6);
+      text-align: center;
+      padding: 36px 40px;
+      font-size: 0.83rem;
+      font-family: 'DM Mono', monospace;
+    }
+
+    footer a { color: #a8d4f5; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 600px) {
+      .hero { padding: 56px 24px 48px; }
+      .container { padding: 0 24px; }
+      .hero-meta { gap: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="nhs-badge">NHS England · 2024–2026</div>
+    <h1>NHS A&amp;E<br><span>4-Hour Compliance</span><br>Analysis</h1>
+    <p class="hero-sub">
+      A Python data pipeline processing monthly NHS A&amp;E attendance records across English trusts — revealing a systemic failure to meet the 95% national target, with wide variation between organisations.
+    </p>
+    <div class="hero-meta">
+      <div class="meta-item">
+        <span class="meta-label">Author</span>
+        <span class="meta-value">Nikit Patel</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Period</span>
+        <span class="meta-value">2024 – 2026</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Stack</span>
+        <span class="meta-value">Python · SQLite · Power BI</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Source</span>
+        <span class="meta-value">NHS England</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <section id="overview">
+    <div class="section-label">01 — Overview</div>
+    <h2>What this project does</h2>
+    <p>
+      This project automates the ingestion and analysis of NHS A&amp;E waiting time data. It reads multiple monthly Excel files published by NHS England, cleans and standardises the data, and loads everything into a SQLite database for SQL querying and Power BI visualisation.
+    </p>
+    <p>
+      The central metric is the <strong>4-hour compliance rate</strong> — the percentage of patients seen, treated, and discharged or admitted within 4 hours of arrival. The national target is 95%. No trust in England met this target across the 2024–2026 period analysed.
+    </p>
+    <div class="cards">
+      <div class="card">
+        <div class="card-number warn">61%</div>
+        <div class="card-label">Lowest single trust compliance — NHS Shropshire, Telford &amp; Wrekin</div>
+      </div>
+      <div class="card">
+        <div class="card-number">95%</div>
+        <div class="card-label">NHS national target — unmet by every trust in the dataset</div>
+      </div>
+      <div class="card">
+        <div class="card-number good">81.2%</div>
+        <div class="card-label">Highest average compliance — NHS Kent &amp; Medway</div>
+      </div>
+      <div class="card">
+        <div class="card-number">2.28M+</div>
+        <div class="card-label">Patients seen by NHS Kent &amp; Medway over the full period</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="visuals">
+    <div class="section-label">02 — Dashboard</div>
+    <h2>Visualisation</h2>
+    <p>Power BI dashboard showing monthly compliance trends, best and worst performing trusts, and the gap between actual performance and the 95% national target.</p>
+    <div class="screenshot-box">
+      <div class="screenshot-bar">
+        <div class="dot dot-r"></div>
+        <div class="dot dot-y"></div>
+        <div class="dot dot-g"></div>
+      </div>
+      <img src="dashboard.png" alt="NHS A&E Power BI Dashboard" class="screenshot-img"
+           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"/>
+      <div class="screenshot-placeholder" style="display:none">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4">
+          <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+        </svg>
+        <span style="font-family:'DM Mono',monospace;font-size:12px;opacity:0.5">dashboard.png will appear here</span>
+      </div>
+      <div class="screenshot-caption">Power BI — NHS A&amp;E 4-Hour Compliance Dashboard · 2024–2026</div>
+    </div>
+  </section>
+
+  <section id="findings">
+    <div class="section-label">03 — Key Findings</div>
+    <h2>What the data reveals</h2>
+    <p>Five headline findings from the analysis of NHS A&amp;E performance across English trusts between 2024 and 2026.</p>
+    <ul class="findings-list">
+
+      <li class="finding-item">
+        <span class="finding-icon">🔴</span>
+        <div class="finding-text">
+          <div class="tag tag-warn">Worst performer</div>
+          <br><strong>NHS Shropshire, Telford and Wrekin recorded the lowest single compliance figure at 61%</strong> — the furthest any trust fell from the 95% national target across the entire dataset.
+        </div>
+      </li>
+
+      <li class="finding-item">
+        <span class="finding-icon">📉</span>
+        <div class="finding-text">
+          <div class="tag tag-warn">Systemic failure</div>
+          <br><strong>Every trust in England fell below the 95% target across the full 2024–2026 period.</strong> This is not an isolated organisational issue — it reflects system-wide pressure on emergency departments nationally.
+        </div>
+      </li>
+
+      <li class="finding-item">
+        <span class="finding-icon">☀️</span>
+        <div class="finding-text">
+          <div class="tag tag-neutral">Seasonal trend</div>
+          <br><strong>Warmer months (May–August) consistently outperform the rest of the year</strong>, with average monthly compliance reaching or exceeding 75%. August 2024 was the single best month at 75.7%, followed by July 2025 at 75.6%.
+        </div>
+      </li>
+
+      <li class="finding-item">
+        <span class="finding-icon">🏆</span>
+        <div class="finding-text">
+          <div class="tag tag-good">Best performer</div>
+          <br><strong>NHS Kent and Medway achieved the highest average compliance at 81.2%</strong> — the only trust to break the 80% threshold — while processing over 2.28 million patients, making it a high-volume, high-performing outlier in the dataset.
+        </div>
+      </li>
+
+      <li class="finding-item">
+        <span class="finding-icon">❄️</span>
+        <div class="finding-text">
+          <div class="tag tag-warn">Winter pressure</div>
+          <br><strong>Winter months show a clear and consistent dip in compliance</strong> across all trusts, reflecting increased A&amp;E demand driven by seasonal illness and cold weather — a recurring pattern throughout the period.
+        </div>
+      </li>
+
+    </ul>
+  </section>
+
+  <section id="howto">
+    <div class="section-label">04 — How to Run</div>
+    <h2>Running the project</h2>
+    <p>Follow these steps to run the data pipeline locally. Requires Python 3.12 and Git.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h3>Clone the repository</h3>
+          <pre>git clone https://github.com/nikitpatel01/Nhs-ae-analysis.git
+cd Nhs-ae-analysis</pre>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h3>Install dependencies</h3>
+          <pre>python -m pip install pandas openpyxl sqlalchemy xlrd matplotlib</pre>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h3>Add your data files</h3>
+          <p>Place NHS A&amp;E Excel files (<code>.xls</code> or <code>.xlsx</code>) into the <code>data/</code> folder. Update <code>folder_path</code> in <code>load_data.py</code> if needed.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <h3>Run the pipeline</h3>
+          <pre>python load_data.py</pre>
+          <p style="margin-top:10px">Outputs <code>nhs_ae.db</code> (SQLite) and <code>nhs_ae_clean.csv</code> ready for Power BI.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <p>Built by <a href="https://github.com/nikitpatel01">Nikit Patel</a> &nbsp;·&nbsp; <a href="https://github.com/nikitpatel01/Nhs-ae-analysis">View on GitHub</a> &nbsp;·&nbsp; Data: NHS England</p>
+</footer>
+
+<script>
+  const sections = document.querySelectorAll('section');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.08 });
+  sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>
