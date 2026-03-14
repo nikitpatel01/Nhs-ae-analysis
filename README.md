@@ -21,3 +21,5 @@ VS Code
 -	Highest average monthly compliance was in August 2024 at 75.7%, followed by July 2025 at 75.6%.
 -	In the past 2 years, the highest average compliance was 81.2% at NHS Kent and Medway, being the only ones to break into > 80% thresholds after having seen > 2.28 million patients
 -	Monthly compliance trends show warmer months, May - August, have an increase in average compliance, scoring equal to or above 75% when rounding.   
+
+![Dashboard](Visualisation_Dashboard_Screenshot.png)
